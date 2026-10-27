@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const supabase = require('../config/supabase');
 
 module.exports = async function protect(req, res, next) {
   const header = req.headers.authorization || '';
@@ -8,9 +8,13 @@ module.exports = async function protect(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(401).json({ message: 'User no longer exists' });
-    req.user = user;
+
+    // make sure the Supabase Auth user still exists
+    const { data, error } = await supabase.auth.admin.getUserById(decoded.id);
+    if (error || !data?.user) return res.status(401).json({ message: 'User no longer exists' });
+
+    const u = data.user;
+    req.user = { id: u.id, name: u.user_metadata?.name || u.email, email: u.email };
     next();
   } catch (err) {
     res.status(401).json({ message: 'Invalid or expired token' });
