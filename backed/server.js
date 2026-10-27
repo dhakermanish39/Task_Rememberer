@@ -1,15 +1,13 @@
-require('dns').setServers(['8.8.8.8', '1.1.1.1']);
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
 
 const app = express();
- 
+
 const allowed = (process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
   .map((s) => s.trim().replace(/\/$/, ''));
- 
+
 app.use(
   cors({
     origin: (origin, cb) => {
@@ -26,4 +24,4 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/tasks', require('./routes/tasks'));
 
 const PORT = process.env.PORT || 5000;
-connectDB().then(() => app.listen(PORT, () => console.log(`Server running on port ${PORT}`)));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
